@@ -1,0 +1,66 @@
+version: '3.3'
+services:
+  imagemaster-teacher:
+    image: misenko/imagemaster3000:latest
+    command: ["--certificate=/run/secrets/imagemaster3000-cert.pem", "--key=/run/secrets/imagemaster3000-key.pem", "--endpoint=http://webserver/teacher/", "--definitions-repository=https://github.com/Misenko/imagemaster3000-definitions.git", "--definitions-branch=${IMAGEMASTER3000_TEACHER_BRANCH}", "--image-list-path=/var/spool/imagemaster3000/imagemaster3000.list", "--image-list-identifier=${IMAGEMASTER3000_TEACHER_BRANCH}", "--group=${IMAGEMASTER3000_TEACHER_GROUP}", "--debug"]
+    volumes:
+      - imagemaster3000-images-teacher:/var/spool/imagemaster3000:Z
+    secrets:
+      - imagemaster3000-cert.pem
+      - imagemaster3000-key.pem
+    deploy:
+      restart_policy:
+        condition: none
+    networks:
+      - bionet
+  imagemaster-student:
+    image: misenko/imagemaster3000:latest
+    command: ["--certificate=/run/secrets/imagemaster3000-cert.pem", "--key=/run/secrets/imagemaster3000-key.pem", "--endpoint=http://webserver/student/", "--definitions-repository=https://github.com/Misenko/imagemaster3000-definitions.git", "--definitions-branch=${IMAGEMASTER3000_STUDENT_BRANCH}", "--image-list-path=/var/spool/imagemaster3000/imagemaster3000.list", "--image-list-identifier=${IMAGEMASTER3000_STUDENT_BRANCH}", "--group=${IMAGEMASTER3000_STUDENT_GROUP}", "--debug"]
+    volumes:
+      - imagemaster3000-images-student:/var/spool/imagemaster3000:Z
+    secrets:
+      - imagemaster3000-cert.pem
+      - imagemaster3000-key.pem
+    deploy:
+      restart_policy:
+        condition: none
+    networks:
+      - bionet
+  imagemaster-nfs:
+    image: misenko/imagemaster3000:latest
+    command: ["--certificate=/run/secrets/imagemaster3000-cert.pem", "--key=/run/secrets/imagemaster3000-key.pem", "--endpoint=http://webserver/nfs/", "--definitions-repository=https://github.com/Misenko/imagemaster3000-definitions.git", "--definitions-branch=${IMAGEMASTER3000_NFS_BRANCH}", "--image-list-path=/var/spool/imagemaster3000/imagemaster3000.list", "--image-list-identifier=${IMAGEMASTER3000_NFS_BRANCH}", "--group=${IMAGEMASTER3000_NFS_GROUP}", "--debug"]
+    volumes:
+      - imagemaster3000-images-nfs:/var/spool/imagemaster3000:Z
+    secrets:
+      - imagemaster3000-cert.pem
+      - imagemaster3000-key.pem
+    deploy:
+      restart_policy:
+        condition: none
+    networks:
+      - bionet
+  webserver:
+    image: linuxserver/nginx:latest
+    environment:
+      PGID: 999
+      PUID: 999
+    ports:
+      - "8080:80"
+    volumes:
+      - imagemaster3000-images-student:/config/www/student:ro
+      - imagemaster3000-images-teacher:/config/www/teacher:ro
+      - imagemaster3000-images-nfs:/config/www/nfs:ro
+    networks:
+      - bionet
+volumes:
+  imagemaster3000-images-teacher:
+  imagemaster3000-images-student:
+  imagemaster3000-images-nfs:
+secrets:
+  imagemaster3000-cert.pem:
+    external: true
+  imagemaster3000-key.pem:
+    external: true
+networks:
+  bionet:
+    driver: overlay

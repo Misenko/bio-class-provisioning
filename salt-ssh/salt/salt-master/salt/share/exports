@@ -1,0 +1,10 @@
+{% for user, data in pillar.get('user_data', {}).items() %}
+/nfs/persistent/{{user}} {% for address in data['ip_addresses'] %} {{address}}(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000) {%- endfor %}
+{% if data['bio_type'] == 'student' %}
+/nfs/shared {% for address in data['ip_addresses'] %} {{address}}(ro,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000) {%- endfor %}
+{% endif %}
+{% if data['bio_type'] == 'teacher' %}
+/nfs/shared {% for address in data['ip_addresses'] %} {{address}}(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000) {%- endfor %}
+/nfs/persistent {% for address in data['ip_addresses'] %} {{address}}(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000) {%- endfor %}
+{% endif %}
+{% endfor %}

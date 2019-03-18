@@ -1,0 +1,21 @@
+auto_accept: True
+
+extension_modules: /srv/salt/modules
+
+opennebula.endpoint: '${OPENNEBULA_ENDPOINT}'
+opennebula.secret: '${OPENNEBULA_SALT_SECRET}'
+
+ext_pillar:
+  - opennebula: _arg_
+
+schedule:
+  bio_orch:
+    function: state.orchestrate
+    minutes: 5
+    args:
+      - orch.bio
+  management_orch:
+    function: state.orchestrate
+    hours: 2
+    args:
+      - orch.management

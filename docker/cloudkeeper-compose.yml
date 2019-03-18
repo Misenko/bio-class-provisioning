@@ -1,0 +1,22 @@
+version: '3.3'
+services:
+  cloudkeeper:
+    image: cloudkeeper/cloudkeeper:latest
+    command: ["--image-lists=http://webserver/student/imagemaster3000.list", "http://webserver/teacher/imagemaster3000.list",  "http://webserver/nfs/imagemaster3000.list", "--remote-mode", "--nginx-binary=/usr/sbin/nginx", "--nginx-ip-address=cloudkeeper", "--nginx-proxy-ip-address=${CLOUDKEEPER_PUBLIC_IP}", "--nginx-proxy-port=50505", "--backend-endpoint=cloudkeeper-one:50051", "--formats=${OPENNEBULA_IMAGE_FORMAT}", "--debug"]
+    ports:
+      - "50505:50505"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 2
+        window: 10s
+  cloudkeeper-one:
+    image: cloudkeeper/cloudkeeper-one:latest
+    command: ["--listen-address=0.0.0.0:50051", "--identifier=cloudkeeper-bio", "--opennebula-endpoint=${OPENNEBULA_ENDPOINT}", "--opennebula-secret=${OPENNEBULA_CLOUDKEEPER_SECRET}", "--opennebula-datastores=${OPENNEBULA_DATASTORE}", "--opennebula-allow-remote-source", "--appliances-template-dir=/templates", "--debug"]
+    volumes:
+      - ${CLOUDKEEPER_TEMPLATES_DIR}:/templates:ro
+networks:
+  default:
+    external:
+      name: bio-imagemaster3000_bionet
